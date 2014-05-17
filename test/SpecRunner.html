@@ -17,12 +17,14 @@
   <script type="text/javascript" src="lib/jasmine-2.0.0/boot.js"></script>
 
   <!-- Shader.Js -->
-  <script type="text/javascript" src="../bin/shader.js"></script>
+<!--  <script type="text/javascript" src="../bin/shader.js"></script>-->
 </head>
 
 <body>
 <script>
   // Use sea.js to load specs
+  seajs.use("./lib/esprima-1.2.1/esprima.js");
+  seajs.use("../bin/shader.js");
   seajs.use("./spec/shader.spec.js");
 </script>
 </body>

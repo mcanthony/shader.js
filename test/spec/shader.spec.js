@@ -2,7 +2,9 @@
 define(function(require, exports, module) {
   return exports = describe("Shader.Js", function() {
     describe("Environment", function() {
-      it("has dependency 'Esprima'");
+      it("has dependency 'Esprima'", function() {
+        return expect(typeof esprima !== "undefined" && esprima !== null).toBe(true);
+      });
       it("has namespace 'window.ShaderJs'", function() {
         return expect(window.ShaderJs != null).toBe(true);
       });

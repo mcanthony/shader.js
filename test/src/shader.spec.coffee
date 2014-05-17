@@ -1,7 +1,8 @@
 define (require, exports, module) ->
         exports = describe "Shader.Js", ->
                 describe "Environment", ->
-                        it "has dependency 'Esprima'"
+                        it "has dependency 'Esprima'", ->
+                                expect(esprima?).toBe true
                         it "has namespace 'window.ShaderJs'", ->
                                 expect(window.ShaderJs?).toBe true
                         it "has class 'Base'", ->
