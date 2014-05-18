@@ -94,6 +94,9 @@ class Base
         # 
         #     # stop now
         #     return true
+        # @see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API Mozilla SpiderMonkey Parser API
+        # @see http://esprima.org/doc/index.html#ast Esprima Syntax Tree Format
+        # @see http://esprima.org/demo/parse.html Esprima Parser Demo
         _walk: (node, accept) ->
                 # If node is an Array, walk each element but not the array
                 if node instanceof Array
