@@ -14,7 +14,10 @@ define (require, exports, module) ->
                 describe "Base", ->
                         it "parses AST"
                 describe "Vertex", ->
-                        it "generates vertex shader"
+                        SimpleVertex = require './SimpleVertex'
+                        it "generates vertex shader", ->
+                                vertex_shader = new SimpleVertex()
+                                vertex_shader.compile()
                 describe "Fragment", ->
                         it "generates fragment shader"
 

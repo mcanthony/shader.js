@@ -34,9 +34,13 @@ namespace('ShaderJs', function(exports) {
     };
 
     Base.prototype.parse = function() {
-      var init_src, process_src;
-      init_src = this.init.toString();
-      process_src = this.process.toString();
+      var init_ast, init_src, process_ast, process_src;
+      init_src = this.init.toString().replace("function ", "function init");
+      process_src = this.process.toString().replace("function ", "function init");
+      console.log(init_ast);
+      console.log(process_ast);
+      init_ast = esprima.parse(init_src).body[0];
+      process_ast = esprima.parse(process_src).body[0];
       return [];
     };
 

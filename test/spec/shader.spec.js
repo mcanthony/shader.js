@@ -22,7 +22,13 @@ define(function(require, exports, module) {
       return it("parses AST");
     });
     describe("Vertex", function() {
-      return it("generates vertex shader");
+      var SimpleVertex;
+      SimpleVertex = require('./SimpleVertex');
+      return it("generates vertex shader", function() {
+        var vertex_shader;
+        vertex_shader = new SimpleVertex();
+        return vertex_shader.compile();
+      });
     });
     return describe("Fragment", function() {
       return it("generates fragment shader");

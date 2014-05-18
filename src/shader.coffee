@@ -26,12 +26,33 @@ namespace 'ShaderJs', (exports) ->
 
                 parse: ->
                         # Get source codes of methods
-                        init_src = @init.toString()
-                        process_src = @process.toString()
+                        init_src = @init.toString().replace "function ", "function init"
+                        process_src = @process.toString().replace "function ", "function init"
+
 
                         # TODO: get other user defined methods
                         # TBD: get consts
 
+                        console.log init_ast
+                        console.log process_ast
+
+                        # Parse ast for methods
+                        init_ast = esprima.parse(init_src).body[0]
+                        process_ast = esprima.parse(process_src).body[0]
+
+                        # TODO: get parameters
+                        # TODO: infer parameters' type somehow
+                        # TODO: validate method body for:
+                        #    1. unsupported js language features (error)
+                        #    2. external function call (error)
+                        #    3. @position not set (warning)
+                        #    4. unused variables (warning)
+                        #    5. no return value (warning if 4)
+                        #    6. unknown type (error)
+                        #    7. unresolved symbols like @xxx (error)
+                        # TODO: translate AST
+                        #    1. @xxx
+                        #    2. initialization
                         # TODO: compile and return ast
                         return []
 
