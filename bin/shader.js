@@ -39,9 +39,6 @@ Base = (function() {
     init_ast = esprima.parse(init_src).body[0];
     process_ast = esprima.parse(process_src).body[0];
     console.log(init_ast);
-    this._walk(init_ast, function(node) {
-      return console.log(node);
-    });
     console.log(process_ast);
     return [init_ast, process_ast];
   };
@@ -73,8 +70,23 @@ Base = (function() {
     fns = [];
     for (_i = 0, _len = ast.length; _i < _len; _i++) {
       fn = ast[_i];
+      this._walk(fn, function(node) {
+        var fn_name, param, _j, _len1, _ref;
+        if (node.type !== "FunctionDeclaration") {
+          return false;
+        }
+        fn_name = node.id.name;
+        _ref = node.params;
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          param = _ref[_j];
+          param.orign = fn_name;
+          symbols.push(param);
+        }
+        return true;
+      });
       fns.push(fn);
     }
+    console.log(symbols);
     return;
     return {
       symbols: symbols,

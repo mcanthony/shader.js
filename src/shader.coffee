@@ -58,10 +58,6 @@ class Base
                 process_ast = esprima.parse(process_src).body[0]
 
                 console.log init_ast
-                
-                @_walk init_ast, (node) ->
-                        console.log node
-                        
                 console.log process_ast
 
                 # TODO: get parameters
@@ -83,6 +79,21 @@ class Base
         # Walk AST with visitor
         # @param {object} node The node of AST to walk
         # @param {(bool) function(object)} accept The visitor callback with the visiting node passed as the only argument. Returns `true` if it wishes to stop walking further down.
+        # @note Internal use only
+        # @example Walk and `console.log` each node's type
+        #   @_walk ast, (node) ->
+        #     console.log node
+        #     # don't stop, walk further down
+        #     return false
+        # @example Walk `FunctionDeclaration`s only
+        #   @_walk ast, (node) ->
+        #     if node.type != "FunctionDeclaration"
+        #       return false
+        # 
+        #     # TODO: do some stuff here (eg. extract signature)
+        # 
+        #     # stop now
+        #     return true
         _walk: (node, accept) ->
                 # If node is an Array, walk each element but not the array
                 if node instanceof Array
@@ -115,8 +126,32 @@ class Base
                 fns = []
                 # TODO: implement tree visitor
                 for fn in ast
+                        # Note: we will walk AST in multiple pass
+                        #       instead of one pass with tons of if..else
+                        
+                        # Pass 1: extract symbol declarations from arguments
+                        @_walk fn, (node) ->
+                                if node.type != "FunctionDeclaration"
+                                        return false
+                                # function name
+                                fn_name = node.id.name
+                                # function parameters
+                                for param in node.params
+                                        # Keep track of origin
+                                        param.orign = fn_name
+                                        # Push to symbol table 
+                                        symbols.push param
+                                # don't walking further down
+                                return true
+                        # TODO: determin symbol types
+                        #    1. attributes
+                        #    2. varyings
+                        #    3. uniforms
+                                        
+
                         # TODO: all translating stuff
                         fns.push fn
+                        
                 # TODO: validate @xxx symbols and translate to
                 #    1. built-ins (gl_Position, color, etc)
                 #    2. uniforms
@@ -128,6 +163,7 @@ class Base
                 # TODO: translate object creation call
                 # TODO: infer object types
                 # TODO: validate symbol references
+                console.log symbols
                 return
                 symbols: symbols
                 fns: fns
