@@ -35,17 +35,57 @@ Base = (function() {
   Base.prototype._parse = function() {
     var init_ast, init_src, process_ast, process_src;
     init_src = this.init.toString().replace("function ", "function init");
-    process_src = this.process.toString().replace("function ", "function init");
+    process_src = this.process.toString().replace("function ", "function main");
     init_ast = esprima.parse(init_src).body[0];
     process_ast = esprima.parse(process_src).body[0];
     console.log(init_ast);
+    this._walk(init_ast, function(node) {
+      return console.log(node);
+    });
     console.log(process_ast);
-    return [];
+    return [init_ast, process_ast];
   };
 
-  Base.prototype._translate = function(ast) {};
+  Base.prototype._walk = function(node, accept) {
+    var child, name, _i, _len;
+    if (node instanceof Array) {
+      for (_i = 0, _len = node.length; _i < _len; _i++) {
+        child = node[_i];
+        this._walk(child, accept);
+      }
+      return;
+    }
+    if ((node instanceof Object) && (node.type != null)) {
+      if (typeof accept === "function" ? accept(node) : void 0) {
+        return;
+      }
+      for (name in node) {
+        child = node[name];
+        this._walk(child, accept);
+      }
+      return;
+    }
+  };
 
-  Base.prototype._generate = function(ast) {};
+  Base.prototype._translate = function(ast) {
+    var fn, fns, symbols, _i, _len;
+    symbols = [];
+    fns = [];
+    for (_i = 0, _len = ast.length; _i < _len; _i++) {
+      fn = ast[_i];
+      fns.push(fn);
+    }
+    return;
+    return {
+      symbols: symbols,
+      fns: fns
+    };
+  };
+
+  Base.prototype._generate = function(ast) {
+    var glsl;
+    return glsl = "";
+  };
 
   return Base;
 

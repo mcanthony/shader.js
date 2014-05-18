@@ -43,12 +43,12 @@ class Base
                 return @_generate ast
 
         # Parse this instance into AST
-        # @return {Array} Raw AST
+        # @return {Array} Array of raw AST for each methods (including {@init} and {@process})
         # @note Internal use only
         _parse: ->
                 # Get source codes of methods
                 init_src = @init.toString().replace "function ", "function init"
-                process_src = @process.toString().replace "function ", "function init"
+                process_src = @process.toString().replace "function ", "function main"
 
                 # TODO: get other user defined methods
                 # TBD: get consts
@@ -58,6 +58,10 @@ class Base
                 process_ast = esprima.parse(process_src).body[0]
 
                 console.log init_ast
+                
+                @_walk init_ast, (node) ->
+                        console.log node
+                        
                 console.log process_ast
 
                 # TODO: get parameters
@@ -74,19 +78,68 @@ class Base
                 #    1. @xxx
                 #    2. initialization
                 # TODO: compile and return ast
-                return []
+                return [init_ast, process_ast]
 
+        # Walk AST with visitor
+        # @param {object} node The node of AST to walk
+        # @param {(bool) function(object)} accept The visitor callback with the visiting node passed as the only argument. Returns `true` if it wishes to stop walking further down.
+        _walk: (node, accept) ->
+                # If node is an Array, walk each element but not the array
+                if node instanceof Array
+                        for child in node
+                                @_walk child, accept
+                        return
+                # Ast node is an object with `type` field
+                if (node instanceof Object) and node.type?
+                        # visit this node first
+                        if accept? node
+                                # visitor don't want to walk further
+                                return
+                        # walk children
+                        for name, child of node
+                                @_walk child, accept
+                        return
+                # Just ignore any other types
+                return
+                
         # Translate raw AST for GLSL generation
         # @param {Array} ast The raw AST returned by {Base._parse} method
-        # @return {Array} Translated AST
+        # @return {object} Translated AST
         # @note Internal use only
         _translate: (ast) ->
+                # symbol table
+                # element type: esprima ast element
+                symbols = []
+                # functions
+                # element type: {id: fn_id, ast: fn_ast}
+                fns = []
+                # TODO: implement tree visitor
+                for fn in ast
+                        # TODO: all translating stuff
+                        fns.push fn
+                # TODO: validate @xxx symbols and translate to
+                #    1. built-ins (gl_Position, color, etc)
+                #    2. uniforms
+                # TODO: extract symbol declarations from arguments for
+                #    1. attributes
+                #    2. varyings
+                #    3. uniforms
+                # TODO: extract varying symbol declartions from return directive
+                # TODO: translate object creation call
+                # TODO: infer object types
+                # TODO: validate symbol references
+                return
+                symbols: symbols
+                fns: fns
 
         # Generate GLSL from translated AST
-        # @param {Array} ast The translated AST returned by {Base._translate} method
+        # @param {object} ast The translated AST returned by {Base._translate} method
         # @return {object} Generation results including GLSL source code, source map, warnings and errors
         # @note Internal use only
         _generate: (ast) ->
+                glsl = ""
+
+                # TODO: symbol decalrations
                 # TODO: generate body (without return)
                 # TODO: generate vary from return
                 # TODO: generate uniform from init(arguments)
