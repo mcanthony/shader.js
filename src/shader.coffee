@@ -1,7 +1,7 @@
 # Delcare namespace
-# @param {object} target the target to attach this namespace (optional). Default to `windows` (browser) or `exports` (node.js)
-# @param {string} name the name of this namespace seperated with dots
-# @param {function(obj)} block the callback for attaching objects to namespace
+# @param {object} target The target to attach this namespace (optional). Default to `windows` (browser) or `exports` (node.js)
+# @param {string} name The name of this namespace seperated with dots
+# @param {function(obj)} block The callback for attaching objects to namespace
 # @example declare a class inside a namespace
 #   namespace 'foo', (exports) ->
 #     exports = class Bar
@@ -22,9 +22,6 @@ class Base
         # @note This method is staticly analysed. It will and should **never** be called at runtime.
         # @note Always leave the body empty.
         init: ->
-                # Implement in derived classes
-                # Arguments of this method will be compiled as uniforms
-                # @setXxx methods will be created for each arguments
 
         # Implement in derived class by shader developer.
         # Body of this method is staticly analysed and compiled to `main()` procedure of GLSL.
@@ -35,19 +32,20 @@ class Base
         # @note This method is staticly analysed. It will and should **never** be called at runtime.
         # @return {Array} {Fragment} shader should return an array of values, which will be compiled as `varying`s and passed to next shader in the pipline.
         process: ->
-                # Implement in derived classes
-                # Arguments of this method will be compiled as
-                #   attributes (vertex shader) or varying (fragment shader)
-                # Vertex shader returns an array whose elements will be comiled as varying
 
         # Compile this class into GLSL shader
         compile: ->
                 # Parse self
-                ast = @parse()
+                ast = @_parse()
+                # Translate AST
+                ast = @_translate ast
                 # Generate GLSL
-                @generate ast
+                return @_generate ast
 
-        parse: ->
+        # Parse this instance into AST
+        # @return {Array} Raw AST
+        # @note Internal use only
+        _parse: ->
                 # Get source codes of methods
                 init_src = @init.toString().replace "function ", "function init"
                 process_src = @process.toString().replace "function ", "function init"
@@ -78,7 +76,17 @@ class Base
                 # TODO: compile and return ast
                 return []
 
-        generate: (ast) ->
+        # Translate raw AST for GLSL generation
+        # @param {Array} ast The raw AST returned by {Base._parse} method
+        # @return {Array} Translated AST
+        # @note Internal use only
+        _translate: (ast) ->
+
+        # Generate GLSL from translated AST
+        # @param {Array} ast The translated AST returned by {Base._translate} method
+        # @return {object} Generation results including GLSL source code, source map, warnings and errors
+        # @note Internal use only
+        _generate: (ast) ->
                 # TODO: generate body (without return)
                 # TODO: generate vary from return
                 # TODO: generate uniform from init(arguments)

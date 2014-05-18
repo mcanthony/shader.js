@@ -27,11 +27,12 @@ Base = (function() {
 
   Base.prototype.compile = function() {
     var ast;
-    ast = this.parse();
-    return this.generate(ast);
+    ast = this._parse();
+    ast = this._translate(ast);
+    return this._generate(ast);
   };
 
-  Base.prototype.parse = function() {
+  Base.prototype._parse = function() {
     var init_ast, init_src, process_ast, process_src;
     init_src = this.init.toString().replace("function ", "function init");
     process_src = this.process.toString().replace("function ", "function init");
@@ -42,7 +43,9 @@ Base = (function() {
     return [];
   };
 
-  Base.prototype.generate = function(ast) {};
+  Base.prototype._translate = function(ast) {};
+
+  Base.prototype._generate = function(ast) {};
 
   return Base;
 
