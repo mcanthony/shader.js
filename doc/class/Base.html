@@ -86,6 +86,42 @@
       Compile this class into GLSL shader 
     </span>
   </li>
+  <li>
+    <span class='signature'>
+      <a href='#_parse-dynamic'>
+        #
+(Array)
+<b>_parse</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Parse this instance into AST 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_translate-dynamic'>
+        #
+(Array)
+<b>_translate</b><span>(ast)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Translate raw AST for GLSL generation 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_generate-dynamic'>
+        #
+(object)
+<b>_generate</b><span>(ast)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Generate GLSL from translated AST 
+    </span>
+  </li>
 </ul>
       <h2>Instance Method Details</h2>
       <div class='methods'>
@@ -162,10 +198,120 @@ Arguments of this method are for sematic purpose only and have diffrent meanings
 <div class='tags'>
 </div>
   </div>
+  <div class='method_details'>
+    <p class='signature' id='_parse-dynamic'>
+      #
+(Array)
+<b>_parse</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <div class='note'>
+    <strong>Note:</strong>
+    Internal use only 
+  </div>
+  <p>Parse this instance into AST</p>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Array</tt>
+      )
+      &mdash;
+      <span class='desc'>Raw AST </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_translate-dynamic'>
+      #
+(Array)
+<b>_translate</b><span>(ast)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <div class='note'>
+    <strong>Note:</strong>
+    Internal use only 
+  </div>
+  <p>Translate raw AST for GLSL generation</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>ast</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The raw AST returned by {Base._parse} method </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Array</tt>
+      )
+      &mdash;
+      <span class='desc'>Translated AST </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_generate-dynamic'>
+      #
+(object)
+<b>_generate</b><span>(ast)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <div class='note'>
+    <strong>Note:</strong>
+    Internal use only 
+  </div>
+  <p>Generate GLSL from translated AST</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>ast</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The translated AST returned by {Base._translate} method </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>object</tt>
+      )
+      &mdash;
+      <span class='desc'>Generation results including GLSL source code, source map, warnings and errors </span>
+    </li>
+  </ul>
+</div>
+  </div>
 </div>
     </div>
     <div id='footer'>
-  May 19, 14 01:19:57 by
+  May 19, 14 03:31:45 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>
