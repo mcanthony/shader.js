@@ -132,8 +132,8 @@ class Base
                         # Note: we will walk AST in multiple pass
                         #       instead of one pass with tons of if..else
                         
-                        # Pass 1: extract symbol declarations from arguments
-                        @_walk fn, (node) ->
+                        # Pass 1: extract symbols
+                        @_walk fn, (node) =>
                                 if node.type != "FunctionDeclaration"
                                         return false
                                 # function name
@@ -142,9 +142,27 @@ class Base
                                 for param in node.params
                                         # Keep track of origin
                                         param.orign = fn_name
+                                        # Keep track of scope
+                                        # Arugments are either uniforms, attributes nor varyings
+                                        # Thay are all global
+                                        param.scope = 'global'
                                         # Push to symbol table 
                                         symbols.push param
-                                # don't walking further down
+
+                                # Nested visit body for local symbols
+                                @_walk fn.body, (body_node) ->
+                                        if body_node.type != 'VariableDeclaration'
+                                                return false
+                                        for declaration in body_node.declarations
+                                                # Scope and origin
+                                                declaration.origin = fn_name
+                                                declaration.scope = 'local'
+                                                # Push as a whole for infering types
+                                                # TODO: body_node.init might be null, search for first ExpressionStatement>AssignmentExpression node for such nodes
+                                                symbols.push declaration
+                                        # don't walk further down
+                                        return true
+                                # don't walk further down
                                 return true
                         # TODO: determin symbol types
                         #    1. attributes

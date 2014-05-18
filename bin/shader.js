@@ -65,7 +65,8 @@ Base = (function() {
   };
 
   Base.prototype._translate = function(ast) {
-    var fn, fns, symbols, _i, _len;
+    var fn, fns, symbols, _i, _len,
+      _this = this;
     symbols = [];
     fns = [];
     for (_i = 0, _len = ast.length; _i < _len; _i++) {
@@ -80,8 +81,23 @@ Base = (function() {
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           param = _ref[_j];
           param.orign = fn_name;
+          param.scope = 'global';
           symbols.push(param);
         }
+        _this._walk(fn.body, function(body_node) {
+          var declaration, _k, _len2, _ref1;
+          if (body_node.type !== 'VariableDeclaration') {
+            return false;
+          }
+          _ref1 = body_node.declarations;
+          for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
+            declaration = _ref1[_k];
+            declaration.origin = fn_name;
+            declaration.scope = 'local';
+            symbols.push(declaration);
+          }
+          return true;
+        });
         return true;
       });
       fns.push(fn);
