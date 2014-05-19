@@ -131,39 +131,77 @@ class Base
                 for fn in ast
                         # Note: we will walk AST in multiple pass
                         #       instead of one pass with tons of if..else
+                        if fn.type != "FunctionDeclaration"
+                                # TODO: error information
+                                continue
+
+                        # function name
+                        fn_name = fn.id.name
                         
                         # Pass 1: extract symbols
-                        @_walk fn, (node) =>
-                                if node.type != "FunctionDeclaration"
-                                        return false
-                                # function name
-                                fn_name = node.id.name
-                                # function parameters
-                                for param in node.params
-                                        # Keep track of origin
-                                        param.orign = fn_name
-                                        # Keep track of scope
-                                        # Arugments are either uniforms, attributes nor varyings
-                                        # Thay are all global
-                                        param.scope = 'global'
-                                        # Push to symbol table 
-                                        symbols.push param
 
-                                # Nested visit body for local symbols
-                                @_walk fn.body, (body_node) ->
-                                        if body_node.type != 'VariableDeclaration'
-                                                return false
-                                        for declaration in body_node.declarations
-                                                # Scope and origin
-                                                declaration.origin = fn_name
-                                                declaration.scope = 'local'
-                                                # Push as a whole for infering types
-                                                # TODO: body_node.init might be null, search for first ExpressionStatement>AssignmentExpression node for such nodes
-                                                symbols.push declaration
-                                        # don't walk further down
-                                        return true
+                        # function parameters
+                        for param in fn.params
+                                # Keep track of origin
+                                param.orign = fn_name
+                                # Keep track of scope
+                                # Arugments are either uniforms, attributes nor varyings
+                                # Thay are all global
+                                param.scope = 'global'
+                                # Push to symbol table 
+                                symbols.push param
+
+                        # Keep track of symbols that are declared but not initialized
+                        unresolved = {}
+                        # Nested visit body for local symbols
+                        @_walk fn.body, (body_node) ->
+                                if body_node.type != 'VariableDeclaration'
+                                        return false
+                                for declaration in body_node.declarations
+                                        # Scope and origin
+                                        declaration.origin = fn_name
+                                        declaration.scope = 'local'
+                                        # If not initialized, need resolve
+                                        if not declaration.init?
+                                                # TODO: throw warning for re-declaration
+                                                unresolved[declaration.id.name] = declaration
+                                        # Push as a whole for infering types
+                                        symbols.push declaration
                                 # don't walk further down
                                 return true
+
+                        # Keep track of assigned symbols
+                        assigned = {}
+                        # Pass 2: resolve symbols
+                        @_walk fn.body, (body_node) ->
+                                # We want an expression
+                                if body_node.type != 'ExpressionStatement'
+                                        return false
+                                expr = body_node.expression
+                                # It must be assignment
+                                if expr.type != 'AssignmentExpression'
+                                        return true
+                                # Left value must be an identifier
+                                if expr.left.type != 'Identifier'
+                                        return true
+                                # Is assigned for the first time?
+                                if assigned[expr.left.name]?
+                                        return true
+                                # Yes it is
+                                assigned[expr.left.name] = expr.left
+                                # Is it unresolved?
+                                sym = unresolved[expr.left.name]
+                                # Yes it is
+                                if sym?
+                                        # Deferred initialization
+                                        sym.defer_init = expr.right
+                                        # Remove from unresolved list
+                                        delete unresolved[expr.left.name]
+
+                        # All symbols should be resolved by now
+                        # TODO: throw errors properly
+                        console.assert Object.keys(unresolved).length == 0, "Not all symbols are resolved"
+                                
                         # TODO: determin symbol types
                         #    1. attributes
                         #    2. varyings

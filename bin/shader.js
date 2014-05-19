@@ -65,41 +65,64 @@ Base = (function() {
   };
 
   Base.prototype._translate = function(ast) {
-    var fn, fns, symbols, _i, _len,
-      _this = this;
+    var assigned, fn, fn_name, fns, param, symbols, unresolved, _i, _j, _len, _len1, _ref;
     symbols = [];
     fns = [];
     for (_i = 0, _len = ast.length; _i < _len; _i++) {
       fn = ast[_i];
-      this._walk(fn, function(node) {
-        var fn_name, param, _j, _len1, _ref;
-        if (node.type !== "FunctionDeclaration") {
+      if (fn.type !== "FunctionDeclaration") {
+        continue;
+      }
+      fn_name = fn.id.name;
+      _ref = fn.params;
+      for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+        param = _ref[_j];
+        param.orign = fn_name;
+        param.scope = 'global';
+        symbols.push(param);
+      }
+      unresolved = {};
+      this._walk(fn.body, function(body_node) {
+        var declaration, _k, _len2, _ref1;
+        if (body_node.type !== 'VariableDeclaration') {
           return false;
         }
-        fn_name = node.id.name;
-        _ref = node.params;
-        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
-          param = _ref[_j];
-          param.orign = fn_name;
-          param.scope = 'global';
-          symbols.push(param);
+        _ref1 = body_node.declarations;
+        for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
+          declaration = _ref1[_k];
+          declaration.origin = fn_name;
+          declaration.scope = 'local';
+          if (declaration.init == null) {
+            unresolved[declaration.id.name] = declaration;
+          }
+          symbols.push(declaration);
         }
-        _this._walk(fn.body, function(body_node) {
-          var declaration, _k, _len2, _ref1;
-          if (body_node.type !== 'VariableDeclaration') {
-            return false;
-          }
-          _ref1 = body_node.declarations;
-          for (_k = 0, _len2 = _ref1.length; _k < _len2; _k++) {
-            declaration = _ref1[_k];
-            declaration.origin = fn_name;
-            declaration.scope = 'local';
-            symbols.push(declaration);
-          }
-          return true;
-        });
         return true;
       });
+      assigned = {};
+      this._walk(fn.body, function(body_node) {
+        var expr, sym;
+        if (body_node.type !== 'ExpressionStatement') {
+          return false;
+        }
+        expr = body_node.expression;
+        if (expr.type !== 'AssignmentExpression') {
+          return true;
+        }
+        if (expr.left.type !== 'Identifier') {
+          return true;
+        }
+        if (assigned[expr.left.name] != null) {
+          return true;
+        }
+        assigned[expr.left.name] = expr.left;
+        sym = unresolved[expr.left.name];
+        if (sym != null) {
+          sym.defer_init = expr.right;
+          return delete unresolved[expr.left.name];
+        }
+      });
+      console.assert(Object.keys(unresolved).length === 0, "Not all symbols are resolved");
       fns.push(fn);
     }
     console.log(symbols);
