@@ -1,3 +1,187 @@
+# Base class with helper methods for walking AST
+class ASTWalker
+        # Walk AST with visitor
+        # @param {object} node The node of AST to walk
+        # @param {(bool) function(object)} accept_before The visitor callback called before chilren are visited. The node being visited is passed as the only argument. Returns `true` if it wishes to stop walking further down.
+        # @param {(void) function(object)} accept_after The visitor callback called after children are visited. The node being visited is passed as the only argument. 
+        # @note Internal use only
+        # @example Walk and `console.log` each node's type
+        #   @_walk ast, (node) ->
+        #     console.log node
+        #     # don't stop, walk further down
+        #     return false
+        # @example Walk `FunctionDeclaration`s only
+        #   @_walk ast, (node) ->
+        #     if node.type != "FunctionDeclaration"
+        #       return false
+        # 
+        #     # TODO: do some stuff here (eg. extract signature)
+        # 
+        #     # stop now
+        #     return true
+        # @see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API Mozilla SpiderMonkey Parser API
+        # @see http://esprima.org/doc/index.html#ast Esprima Syntax Tree Format
+        # @see http://esprima.org/demo/parse.html Esprima Parser Demo
+        _walk: (node, accept_before, accept_after) ->
+                # If node is an Array, walk each element but not the array
+                if node instanceof Array
+                        for child in node
+                                @_walk child, accept_before, accept_after
+                        return
+                # Ast node is an object with `type` field
+                if (node instanceof Object) and node.type?
+                        # visit this node before
+                        if accept_before? node
+                                # visitor don't want to walk further
+                                return
+                        # walk children
+                        for name, child of node
+                                @_walk child, accept_before, accept_after
+                        # visit this node after
+                        accept_after? node
+                        return
+                # Just ignore any other types
+                return
+
+        
+# Extract symbols from a `FunctionDeclaration` node
+class SymbolExtractor extends ASTWalker
+        constructor: ->
+                @symbols = []
+                
+        extractAll: (fn_list) ->
+                for fn in fn_list
+                        @extract fn
+                        
+        extract: (fn) ->
+                if fn.type != "FunctionDeclaration"
+                        # TODO: error information
+                        return
+
+                # function name
+                fn_name = fn.id.name
+                # Keep track of symbols that are declared but not initialized
+                unresolved = {}
+                                
+                # Pass 1: extract symbols
+
+                # function parameters
+                for param in fn.params
+                # Push to symbol table
+                # Symbol's format matchs 'VariableDecalration'
+                        p =
+                                id: param
+                                origin: fn_name # Keep track of origin
+                                scope: 'this'   # Keep track of scope
+                                type: '_ThisDeclaration' # Extened node all starts with _
+                                init: null      # Not initialized
+                                isExtNode: true # Extended node, not part of Esprima's original spec
+                        # Push symbol
+                        @symbols.push p
+
+                # TODO: find all assignments for each symbols
+                # TODO: find all reference for each symbols
+                # Local symbols' types are inferred from first assignments
+                # Nested visit body for local symbols
+                @_walk fn.body, (body_node) =>
+                        # TODO: get all necessary datas here
+                        #       all referenced symbols
+                        #       and categorize them into left-value & right-value
+                        if body_node.type != 'VariableDeclaration'
+                                return false
+                        for declaration in body_node.declarations
+                                # Scope and origin are both identified by fn_name
+                                declaration.origin = fn_name
+                                declaration.scope = fn_name
+                                # If not initialized, need resolve
+                                if not declaration.init?
+                                        # TODO: throw warning for re-declaration
+                                        unresolved[declaration.id.name] = declaration
+                                # Push as a whole for infering types
+                                @symbols.push declaration
+                        # don't walk further down
+                        return true
+
+                # Keep track of assigned symbols
+                assigned = {}
+                # Pass 2: resolve symbols
+                @_walk fn.body, (body_node) =>
+                        # We want an expression
+                        if body_node.type != 'ExpressionStatement'
+                                return false
+                        expr = body_node.expression
+                        # It must be assignment
+                        if expr.type != 'AssignmentExpression'
+                                return true
+                        # Left value must be an identifier
+                        if expr.left.type != 'Identifier'
+                                return true
+                        # Is assigned for the first time?
+                        if assigned[expr.left.name]?
+                                return true
+                        # Yes it is
+                        assigned[expr.left.name] = expr.left
+                        # Is it unresolved?
+                        sym = unresolved[expr.left.name]
+                        # Yes it is
+                        if sym?
+                                # Deferred initialization
+                                sym.defer_init = expr.right
+                                # Remove from unresolved list
+                                delete unresolved[expr.left.name]
+
+                # All symbols should be resolved by now
+                # TODO: throw errors properly
+                console.assert Object.keys(unresolved).length == 0, "Not all symbols are resolved"                
+        
+# Resolve symbol's type
+class TypeResolver extends ASTWalker
+        # Create a TypeResolver instance
+        # @param {object} known_symbols A list of symbols with known types
+        constructor: (known_symbols)->
+                @type_table = {}
+        # Resolve a symbol's type from initialization
+        # @param {object} symbol The symbol to be resolved
+        # @return {bool} A bool value indicates wheter the type information has been resolved. 
+        resolve: (symbol) ->
+                scope = symbol.scope
+                id = symbol.id.name
+
+                if not @type_table[scope]?
+                        @type_table[scope] = {}
+                if not @type_table[scope][id]?
+                        @type_table[scope][id] = null
+
+                # Already resolved
+                if symbol.value_type?
+                        return true
+                else if @type_table[scope][id]?
+                        symbol.value_type = @type_table[scope][id]
+                        return true
+
+                # Try resolve
+                init = symbol.init ? symbol.defer_init
+                if not init?
+                        return false
+                if init.type == "NewExpression"
+                        symbol.value_type = init.callee.name
+                        console.log symbol.value_type
+                        return true
+                # TODO: build-in factory function call
+                return false
+
+        # Evaluate an AST node and try to infer symbol's type information from it.
+        # All known symbols should be decalred by either {constructor} or {resolve}.
+        # Errors will be thrown if one of the following happens:
+        # * undecalred symbols are encontered
+        # * type confilict
+        # @param {string} scope The scope of the AST node
+        # @param {ast} ast The AST node to be evaluated
+        # @return {bool] True if there are no symbols to be resolved or all symbols are resolved
+        eval: (scope, ast) ->
+                # TODO: 
+                
+
 # Delcare namespace
 # @param {object} target The target to attach this namespace (optional). Default to `windows` (browser) or `exports` (node.js)
 # @param {string} name The name of this namespace seperated with dots
@@ -75,141 +259,58 @@ class Base
                 #    2. initialization
                 # TODO: compile and return ast
                 return [init_ast, process_ast]
-
-        # Walk AST with visitor
-        # @param {object} node The node of AST to walk
-        # @param {(bool) function(object)} accept The visitor callback with the visiting node passed as the only argument. Returns `true` if it wishes to stop walking further down.
-        # @note Internal use only
-        # @example Walk and `console.log` each node's type
-        #   @_walk ast, (node) ->
-        #     console.log node
-        #     # don't stop, walk further down
-        #     return false
-        # @example Walk `FunctionDeclaration`s only
-        #   @_walk ast, (node) ->
-        #     if node.type != "FunctionDeclaration"
-        #       return false
-        # 
-        #     # TODO: do some stuff here (eg. extract signature)
-        # 
-        #     # stop now
-        #     return true
-        # @see https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API Mozilla SpiderMonkey Parser API
-        # @see http://esprima.org/doc/index.html#ast Esprima Syntax Tree Format
-        # @see http://esprima.org/demo/parse.html Esprima Parser Demo
-        _walk: (node, accept) ->
-                # If node is an Array, walk each element but not the array
-                if node instanceof Array
-                        for child in node
-                                @_walk child, accept
-                        return
-                # Ast node is an object with `type` field
-                if (node instanceof Object) and node.type?
-                        # visit this node first
-                        if accept? node
-                                # visitor don't want to walk further
-                                return
-                        # walk children
-                        for name, child of node
-                                @_walk child, accept
-                        return
-                # Just ignore any other types
-                return
                 
         # Translate raw AST for GLSL generation
         # @param {Array} ast The raw AST returned by {Base._parse} method
         # @return {object} Translated AST
         # @note Internal use only
         _translate: (ast) ->
+                extractor = new SymbolExtractor()
                 # symbol table
                 # element type: esprima ast element
-                symbols = []
+                extractor.extractAll ast
+                symbols = extractor.symbols
+                console.log symbols
                 # functions
                 # element type: {id: fn_id, ast: fn_ast}
                 fns = []
-                # TODO: implement tree visitor
-                for fn in ast
-                        # Note: we will walk AST in multiple pass
-                        #       instead of one pass with tons of if..else
-                        if fn.type != "FunctionDeclaration"
-                                # TODO: error information
-                                continue
+                
+                # Pass 3: resolve symbol types and references
+                # Note: There are no type information for method arguments,
+                #       thus the type information has to be inferred from usage.
+                #       Locals are relatively easy since they have to be intialized.
+                #       There're two scenerios:
+                #       1. Initialized by NewExpression
+                #       2. Initialized by expression
+                #       A reference tree/graph should be built first.
+                #       Symbols of S1 are leafs while other are nodes.
+                #       Type information can be then calculated bottom up.
+                resolved_total = 0
+                resolved_last_run = 1
+                need_resolve = Object.keys(symbols).length
+                resolver = new TypeResolver()
+                not_all_resolved = true
+                while not_all_resolved and resolved_last_run > 0
+                        resolved_last_run = 0
+                        for sym in symbols
+                                # Type already resolved
+                                if sym.value_type?
+                                        continue
+                                if resolver.resolve sym
+                                        resolved_total++
+                                        resolved_last_run++
+                        not_all_resolved = resolved_total < need_resolve
 
-                        # function name
-                        fn_name = fn.id.name
                         
-                        # Pass 1: extract symbols
-
-                        # function parameters
-                        for param in fn.params
-                                # Keep track of origin
-                                param.orign = fn_name
-                                # Keep track of scope
-                                # Arugments are either uniforms, attributes nor varyings
-                                # Thay are all global
-                                param.scope = 'global'
-                                # Push to symbol table 
-                                symbols.push param
-
-                        # Keep track of symbols that are declared but not initialized
-                        unresolved = {}
-                        # Nested visit body for local symbols
-                        @_walk fn.body, (body_node) ->
-                                if body_node.type != 'VariableDeclaration'
-                                        return false
-                                for declaration in body_node.declarations
-                                        # Scope and origin
-                                        declaration.origin = fn_name
-                                        declaration.scope = 'local'
-                                        # If not initialized, need resolve
-                                        if not declaration.init?
-                                                # TODO: throw warning for re-declaration
-                                                unresolved[declaration.id.name] = declaration
-                                        # Push as a whole for infering types
-                                        symbols.push declaration
-                                # don't walk further down
-                                return true
-
-                        # Keep track of assigned symbols
-                        assigned = {}
-                        # Pass 2: resolve symbols
-                        @_walk fn.body, (body_node) ->
-                                # We want an expression
-                                if body_node.type != 'ExpressionStatement'
-                                        return false
-                                expr = body_node.expression
-                                # It must be assignment
-                                if expr.type != 'AssignmentExpression'
-                                        return true
-                                # Left value must be an identifier
-                                if expr.left.type != 'Identifier'
-                                        return true
-                                # Is assigned for the first time?
-                                if assigned[expr.left.name]?
-                                        return true
-                                # Yes it is
-                                assigned[expr.left.name] = expr.left
-                                # Is it unresolved?
-                                sym = unresolved[expr.left.name]
-                                # Yes it is
-                                if sym?
-                                        # Deferred initialization
-                                        sym.defer_init = expr.right
-                                        # Remove from unresolved list
-                                        delete unresolved[expr.left.name]
-
-                        # All symbols should be resolved by now
-                        # TODO: throw errors properly
-                        console.assert Object.keys(unresolved).length == 0, "Not all symbols are resolved"
-                                
-                        # TODO: determin symbol types
-                        #    1. attributes
-                        #    2. varyings
-                        #    3. uniforms
+                # TODO: throw errors properly
+                console.assert not not_all_resolved, "Not all symbols' types are resolved (#{resolved_total}/#{need_resolve})"
+                
+                # TODO: determin symbol keywords
+                #    1. attributes
+                #    2. varyings
+                #    3. uniforms
                                         
 
-                        # TODO: all translating stuff
-                        fns.push fn
                         
                 # TODO: validate @xxx symbols and translate to
                 #    1. built-ins (gl_Position, color, etc)
@@ -248,6 +349,7 @@ class Vertex extends Base
 class Fragment extends Base
         
 namespace 'ShaderJs', (exports) ->
+        exports.TypeResolver = TypeResolver
         exports.Base = Base
         exports.Fragment = Fragment
         exports.Vertex = Vertex
