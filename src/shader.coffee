@@ -42,17 +42,33 @@ class ASTWalker
                         return
                 # Just ignore any other types
                 return
-
         
 # Extract symbols from a `FunctionDeclaration` node
 class SymbolExtractor extends ASTWalker
+        # Create an instance of this class
         constructor: ->
                 @symbols = []
-                
+
+        # Extract all symbols from an Array of `FunctionDeclaration` AST nodes
+        # See {extract} method for more information.
+        # @param {Array} fn_list An array of `FunctionDeclaration` AST nodes
         extractAll: (fn_list) ->
                 for fn in fn_list
                         @extract fn
-                        
+
+        # Extract all symbols from one `FunctionDeclaration` AST node.
+        # All extracted symbols are in the form of `VariableDeclaration` nodes
+        # and are stored in {@symbols} with some of the following fields added:
+        # Field Name  | Description
+        # ----------  | -----------
+        # `origin`    | The origin of this symbol identified with function's name
+        # `scope`     | The scope of this symbol identified with either `this` or function's name
+        # `defer_init`| If `init` field is `null`, this method will find first asignment to this symbol and set to this field
+        # A few remarks on symbols extracted from function's arguments:
+        # * They are put in `this` scop since they will be later used as an property of its class
+        # * Their types are `_ThisDeclaration`
+        # * An additional field `isExtNode` = `true` is set to identify them as non-standard AST
+        # @param {object} fn A `FunctionDeclaration` AST node
         extract: (fn) ->
                 if fn.type != "FunctionDeclaration"
                         # TODO: error information
