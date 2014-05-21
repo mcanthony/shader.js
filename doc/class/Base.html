@@ -100,18 +100,6 @@
   </li>
   <li>
     <span class='signature'>
-      <a href='#_walk-dynamic'>
-        #
-(void)
-<b>_walk</b><span>(node, accept)</span>
-      </a>
-    </span>
-    <span class='desc'>
-      Walk AST with visitor 
-    </span>
-  </li>
-  <li>
-    <span class='signature'>
       <a href='#_translate-dynamic'>
         #
 (object)
@@ -239,79 +227,6 @@ Arguments of this method are for sematic purpose only and have diffrent meanings
 </div>
   </div>
   <div class='method_details'>
-    <p class='signature' id='_walk-dynamic'>
-      #
-(void)
-<b>_walk</b><span>(node, accept)</span>
-      <br>
-    </p>
-    <div class='docstring'>
-  <div class='note'>
-    <strong>Note:</strong>
-    Internal use only 
-  </div>
-  <p>Walk AST with visitor</p>
-  <div class='examples'>
-    <h3>Examples:</h3>
-    <h4>
-      Walk and `console.log` each node&#39;s type
-    </h4>
-    <pre><code class='coffeescript'>@_walk ast, (node) -&gt;
-  console.log node
-  # don&#39;t stop, walk further down
-  return false</code></pre>
-    <h4>
-      Walk `FunctionDeclaration`s only
-    </h4>
-    <pre><code class='coffeescript'>@_walk ast, (node) -&gt;
-  if node.type != &quot;FunctionDeclaration&quot;
-    return false
-
-  # TODO: do some stuff here (eg. extract signature)
-
-  # stop now
-  return true</code></pre>
-  </div>
-</div>
-<div class='tags'>
-  <h3>Parameters:</h3>
-  <ul class='param'>
-    <li>
-      <span class='name'>node</span>
-      <span class='type'>
-        (
-          <tt>object</tt>
-        )
-      </span>
-      &mdash;
-      <span class='desc'>The node of AST to walk </span>
-    </li>
-    <li>
-      <span class='name'>accept</span>
-      <span class='type'>
-        (
-          <tt>(bool) function(object)</tt>
-        )
-      </span>
-      &mdash;
-      <span class='desc'>The visitor callback with the visiting node passed as the only argument. Returns <code>true</code> if it wishes to stop walking further down. </span>
-    </li>
-  </ul>
-  <h3>See also:</h3>
-  <ul class='see'>
-    <li>
-      <a href='https://developer.mozilla.org/en-US/docs/Mozilla/Projects/SpiderMonkey/Parser_API'>Mozilla SpiderMonkey Parser API</a>
-    </li>
-    <li>
-      <a href='http://esprima.org/doc/index.html#ast'>Esprima Syntax Tree Format</a>
-    </li>
-    <li>
-      <a href='http://esprima.org/demo/parse.html'>Esprima Parser Demo</a>
-    </li>
-  </ul>
-</div>
-  </div>
-  <div class='method_details'>
     <p class='signature' id='_translate-dynamic'>
       #
 (object)
@@ -396,7 +311,7 @@ Arguments of this method are for sematic purpose only and have diffrent meanings
 </div>
     </div>
     <div id='footer'>
-  May 19, 14 05:57:00 by
+  May 21, 14 09:00:58 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

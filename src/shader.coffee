@@ -59,32 +59,33 @@ class SymbolExtractor extends ASTWalker
         # Extract all symbols from one `FunctionDeclaration` AST node.
         # All extracted symbols are in the form of `VariableDeclaration` nodes
         # and are stored in {@symbols} with some of the following fields added:
+        # 
         # Field Name  | Description
         # ----------  | -----------
         # `origin`    | The origin of this symbol identified with function's name
         # `scope`     | The scope of this symbol identified with either `this` or function's name
         # `defer_init`| If `init` field is `null`, this method will find first asignment to this symbol and set to this field
+        # 
         # A few remarks on symbols extracted from function's arguments:
         # * They are put in `this` scop since they will be later used as an property of its class
         # * Their types are `_ThisDeclaration`
-        # * An additional field `isExtNode` = `true` is set to identify them as non-standard AST
+        # * An additional field `isExtNode` = `true` is added to each one to identify them as non-standard AST
         # @param {object} fn A `FunctionDeclaration` AST node
         extract: (fn) ->
                 if fn.type != "FunctionDeclaration"
                         # TODO: error information
                         return
-
+                        
                 # function name
                 fn_name = fn.id.name
                 # Keep track of symbols that are declared but not initialized
                 unresolved = {}
                                 
                 # Pass 1: extract symbols
-
                 # function parameters
                 for param in fn.params
-                # Push to symbol table
-                # Symbol's format matchs 'VariableDecalration'
+                        # Push to symbol table
+                        # Symbol's format matchs 'VariableDecalration'
                         p =
                                 id: param
                                 origin: fn_name # Keep track of origin
@@ -95,14 +96,9 @@ class SymbolExtractor extends ASTWalker
                         # Push symbol
                         @symbols.push p
 
-                # TODO: find all assignments for each symbols
-                # TODO: find all reference for each symbols
                 # Local symbols' types are inferred from first assignments
                 # Nested visit body for local symbols
                 @_walk fn.body, (body_node) =>
-                        # TODO: get all necessary datas here
-                        #       all referenced symbols
-                        #       and categorize them into left-value & right-value
                         if body_node.type != 'VariableDeclaration'
                                 return false
                         for declaration in body_node.declarations
@@ -148,8 +144,8 @@ class SymbolExtractor extends ASTWalker
 
                 # All symbols should be resolved by now
                 # TODO: throw errors properly
-                console.assert Object.keys(unresolved).length == 0, "Not all symbols are resolved"                
-        
+                console.assert Object.keys(unresolved).length == 0, "Not all symbols are resolved"
+                                
 # Resolve symbol's type
 class TypeResolver extends ASTWalker
         # Create a TypeResolver instance
@@ -196,7 +192,6 @@ class TypeResolver extends ASTWalker
         # @return {bool] True if there are no symbols to be resolved or all symbols are resolved
         eval: (scope, ast) ->
                 # TODO: 
-                
 
 # Delcare namespace
 # @param {object} target The target to attach this namespace (optional). Default to `windows` (browser) or `exports` (node.js)
@@ -316,7 +311,6 @@ class Base
                                         resolved_total++
                                         resolved_last_run++
                         not_all_resolved = resolved_total < need_resolve
-
                         
                 # TODO: throw errors properly
                 console.assert not not_all_resolved, "Not all symbols' types are resolved (#{resolved_total}/#{need_resolve})"
@@ -325,8 +319,6 @@ class Base
                 #    1. attributes
                 #    2. varyings
                 #    3. uniforms
-                                        
-
                         
                 # TODO: validate @xxx symbols and translate to
                 #    1. built-ins (gl_Position, color, etc)
