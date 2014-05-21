@@ -18,9 +18,10 @@ SimpleVertex = (function(_super) {
   };
 
   SimpleVertex.prototype.process = function(pos, normal, uv) {
-    var trans_normal;
+    var normal4, trans_normal;
     this.position = this.mvp_mat * pos;
-    trans_normal = normal_mat * new Vec4(normal, 1);
+    normal4 = new Vec4(normal, 1);
+    trans_normal = this.normal_mat * normal4;
     return [uv.st, max(dot(trans_normal.xyz, this.light_dir), 0.0)];
   };
 

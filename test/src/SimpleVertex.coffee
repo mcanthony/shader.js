@@ -5,8 +5,8 @@ class SimpleVertex extends ShaderJs.Vertex
         process: (pos, normal, uv) ->
                 # position is gl_Position
                 @position = @mvp_mat * pos
-
-                trans_normal = normal_mat * new Vec4(normal, 1)
+                normal4 = new Vec4(normal, 1)
+                trans_normal = @normal_mat * normal4
 
                 # Return array contains varying
                 return [uv.st, max dot(trans_normal.xyz, @light_dir), 0.0]
