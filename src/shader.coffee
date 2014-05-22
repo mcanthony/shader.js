@@ -1,3 +1,96 @@
+# Helper class for resloving AST path
+#
+# ### Path Syntax
+# ```
+# RootNode:
+#     ':'
+#     ':' AstType
+# AstNode:
+#     ':'
+#     Identifier
+#     Identifier ':' AstType
+# AstPath:
+#     RootNode
+#     AstPath '>' AstNode
+# ```
+# Notes:
+# * `Identifier` field is used to search a node in AST
+# * `AstType` field is used for node type validation
+# * First node's `Identifier` field should always be empty
+# @example Some valid pathes
+#   # assert root.type == 'FunctionDeclaration'
+#   ':FunctionDeclaration'
+#   # get root.expr.left
+#   ':>expr>left'
+#   # get root.expr.left and assert each node's type
+#   ':ExpressionStatement>expr:AssignmentExpression>left:Identifier'
+# @todo Implement Array accessor syntax
+class ASTPathResolver
+        # Parse a path
+        # @param {string} path The path string
+        # @return {Array} An array of path nodes (format: `{id: identifier, type: ast_type}`)
+        parse: (path) ->
+                node_strs = path.split '>'
+                results = []
+                for node_str in node_strs
+                        node = node_str.split ':'
+                        results.push
+                                id: node[0] ? ''
+                                type: node[1] ? ''
+                return results
+        # Resove given path string from specified root
+        # @param {object} root The root AST node
+        # @path {string} path The path string
+        # @return {object} The node specified by path. The value will be `null` if path is not valid
+        resolve: (root, path) ->
+                nodes = @parse path
+                
+                # handle root node
+                root_node = nodes.shift()
+                # root should not have id
+                console.assert root_node.id == '', "Expect path_root.id == ''"
+                # check type
+                if root_node.type != '' and root_node.type != root.type
+                        return null
+                # root matched
+                current = root
+                # the rest
+                for node in nodes
+                        next_id = node.id
+                        next_type = node.type
+                        # must have id
+                        console.assert next_id != '', "path_node.id not specified"
+                        # get next
+                        next = node[next_id]
+                        # check existance
+                        if not current? then return null
+                        # check type
+                        if next_type != '' and next.type != next_type then return null
+                        # all ok
+                        current = next
+                # done
+                return current
+                
+# Match AST node path and dispatch method calls
+# @todo Pass path nodes in reverse order to callbacks
+# @todo Collect return values
+class ASTPathDispatcher
+        # Create an instance of this class
+        # @param {object} map The dispatch map
+        # @example Map format
+        #   map =
+        #     ':FunctionDeclaration': (node) ->
+        #       # do stuff with the node
+        #     ':ExpressionStatement>expr:AssignmentExpression>left:Identifier': (node)->
+        #       # do stuff with the node
+        constructor: (@map) ->
+                @resolver = new ASTPathResolver()
+
+        dispatch: (node) ->
+                for path, callback of @map
+                        node = @resolver.resolve node, path
+                        if node? then callback? node
+                                
 # Base class with helper methods for walking AST
 class ASTWalker
         # Walk AST with visitor
@@ -176,8 +269,7 @@ class TypeResolver extends ASTWalker
                 if not init?
                         return false
                 if init.type == "NewExpression"
-                        symbol.value_type = init.callee.name
-                        console.log symbol.value_type
+                        @type_table[scope][id] = symbol.value_type = init.callee.name
                         return true
                 # TODO: build-in factory function call
                 return false
