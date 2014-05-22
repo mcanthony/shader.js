@@ -15,8 +15,16 @@ namespace = (target, name, block) ->
         block target, top
 
 namespace 'ShaderJs', (exports) ->
-        exports.TypeResolver = TypeResolver
         exports.Base = Base
         exports.Fragment = Fragment
         exports.Vertex = Vertex
         return
+
+namespace 'ShaderJs.Compiler', (exports) ->
+        exports.SymbolExtractor = SymbolExtractor
+        exports.TypeResolver = TypeResolver
+
+namespace 'ShaderJs.Ast', (exports) ->
+        exports.Path = ASTPathResolver
+        exports.Dispatcher = ASTPathDispatcher
+        exports.Walker = ASTWalker
