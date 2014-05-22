@@ -30,7 +30,7 @@
       <table class='box'>
         <tr>
           <td>Defined in:</td>
-          <td>src\shader.coffee</td>
+          <td>src\compiler.coffee</td>
         </tr>
         <tr>
           <td>Inherits:</td>
@@ -162,7 +162,7 @@ and are stored in {@symbols} with some of the following fields added:</p><table>
 </table><p>A few remarks on symbols extracted from function&#39;s arguments:</p><ul>
 <li>They are put in <code>this</code> scop since they will be later used as an property of its class</li>
 <li>Their types are <code>_ThisDeclaration</code></li>
-<li>An additional field <code>isExtNode</code> = <code>true</code> is set to identify them as non-standard AST</li>
+<li>An additional field <code>isExtNode</code> = <code>true</code> is added to each one to identify them as non-standard AST</li>
 </ul>
 
 </div>
@@ -185,7 +185,7 @@ and are stored in {@symbols} with some of the following fields added:</p><table>
 </div>
     </div>
     <div id='footer'>
-  May 21, 14 09:00:58 by
+  May 22, 14 08:51:48 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

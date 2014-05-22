@@ -19,20 +19,97 @@
       Index
     </a>
     &raquo;
-    <span class='title'>test\src\SimpleVertex.coffee</span>
+    <span class='title'>src\index.coffee</span>
   </div>
 </div>
     <div id='content'>
       <h1>
         File:
-        SimpleVertex.coffee
+        index.coffee
       </h1>
       <table class='box'>
         <tr>
           <td>Defined in:</td>
-          <td>test\src</td>
+          <td>src</td>
         </tr>
       </table>
+      <h2>Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#namespace-'>
+        ~
+(void)
+<b>namespace</b><span>(target, name, block)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Delcare namespace 
+    </span>
+  </li>
+</ul>
+      <h2>Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='namespace-'>
+      ~
+(void)
+<b>namespace</b><span>(target, name, block)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Delcare namespace</p>
+  <div class='examples'>
+    <h3>Examples:</h3>
+    <h4>
+      declare a class inside a namespace
+    </h4>
+    <pre><code class='coffeescript'>namespace &#39;foo&#39;, (exports) -&gt;
+  exports = class Bar</code></pre>
+    <h4>
+      declare a named function inside a namespace
+    </h4>
+    <pre><code class='coffeescript'>namespace &#39;foo&#39;, (exports) -&gt;
+  exports.fn = -&gt;</code></pre>
+  </div>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>target</span>
+      <span class='type'>
+        (
+          <tt>object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The target to attach this namespace (optional). Default to <code>windows</code> (browser) or <code>exports</code> (node.js) </span>
+    </li>
+    <li>
+      <span class='name'>name</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The name of this namespace seperated with dots </span>
+    </li>
+    <li>
+      <span class='name'>block</span>
+      <span class='type'>
+        (
+          <tt>function(obj)</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The callback for attaching objects to namespace </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
     </div>
     <div id='footer'>
   May 22, 14 08:51:48 by
