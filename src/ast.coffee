@@ -41,21 +41,27 @@ class ASTPathResolver
         # Resove given path string from specified root
         # @param {object} root The root AST node
         # @path {string} path The path string
-        # @return {object} The node specified by path. The value will be `null` if path is not valid
+        # @return {Array} An array of each AST node in the path. Its length equals path nodes' count. Each element's value will be `null` if the corresponding path node is not valid.
         resolve: (root, path) ->
                 nodes = @parse path
-                
+                results = []
                 # handle root node
                 root_node = nodes.shift()
                 # root should not have id
                 console.assert root_node.id == '', "Expect path_root.id == ''"
                 # check type
                 if root_node.type != '' and root_node.type != root.type
-                        return null
+                        root = null
+                # push root
+                results.push root
                 # root matched
                 current = root
                 # the rest
                 for node in nodes
+                        # Not valid, perserve counts
+                        if not current?
+                                results.push null
+                                continue
                         next_id = node.id
                         next_type = node.type
                         # must have id
@@ -63,33 +69,45 @@ class ASTPathResolver
                         # get next
                         next = node[next_id]
                         # check existance
-                        if not current? then return null
-                        # check type
-                        if next_type != '' and next.type != next_type then return null
+                        if next?
+                                # check type
+                                if next_type != '' and next.type != next_type
+                                        next = null
                         # all ok
                         current = next
+                        # push
+                        results.push current
                 # done
-                return current
+                return results
                 
 # Match AST node path and dispatch method calls
 # @todo Pass path nodes in reverse order to callbacks
 # @todo Collect return values
+# @todo Nested dispatch
 class ASTPathDispatcher
         # Create an instance of this class
         # @param {object} map The dispatch map
         # @example Map format
         #   map =
-        #     ':FunctionDeclaration': (node) ->
+        #     ':FunctionDeclaration': (fn) ->
         #       # do stuff with the node
-        #     ':ExpressionStatement>expr:AssignmentExpression>left:Identifier': (node)->
+        #     # The last AST node in path is passed first. Then the result are passed in order.
+        #     ':ExpressionStatement>expr:AssignmentExpression>left:Identifier': (id, root, expr)->
         #       # do stuff with the node
         constructor: (@map) ->
                 @resolver = new ASTPathResolver()
 
+        # Receive a node as root and resolve pathes from there.
+        # If any path in the map can be resloved from specified node,
+        # the method registered in that path will be invoked.
+        # @param {object} node The AST node
         dispatch: (node) ->
                 for path, callback of @map
-                        node = @resolver.resolve node, path
-                        if node? then callback? node
+                        nodes = @resolver.resolve node, path
+                        # pop the last one and pass it first
+                        last = nodes.pop()
+                        nodes.unshift last
+                        if last? then callback?.apply undefined, nodes
                                 
 # Base class with helper methods for walking AST
 class ASTWalker
