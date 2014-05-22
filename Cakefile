@@ -7,10 +7,15 @@
 # * docs  - generates annotated documentation using docco
 # * clean - clean generated .js files
 files = [
-  'src'
+  'src/ast.coffee'
+  'src/compiler.coffee'
+  'src/base.coffee'
+  'src/vertex.coffee'
+  'src/fragment.coffee'
+  'src/index.coffee'
 ]
 
-output = 'bin'
+output = 'bin/shader.js'
 
 fs = require 'fs'
 {print} = require 'util'
@@ -40,7 +45,7 @@ red = '\x1b[0;31m'
 # ```
 # cake docs
 # ```
-task 'docs', 'generate documentation', -> docco()
+task 'docs', 'generate documentation', -> codo()
 
 # ## *build*
 #
@@ -144,7 +149,7 @@ launch = (cmd, options=[], callback) ->
   app.stderr.pipe(process.stderr)
   app.on 'exit', (status) ->
     if status is 0
-      callback()
+      callback?()
     else
       process.exit(status);
 
@@ -159,9 +164,10 @@ build = (watch, callback) ->
     callback = watch
     watch = false
 
-  options = ['-o', output, '-c', '-b']
+  options = ['-j', output, '-c', '-b']
   options = options.concat files
   options.unshift '-w' if watch
+  console.log options
   launch 'coffee', options, callback
 
 # ## *unlinkIfCoffeeFile*
@@ -230,3 +236,6 @@ mocha = (options, callback) ->
 docco = (callback) ->
   #if moduleExists('docco')
   walk 'src', (err, files) -> launch 'docco', files, callback
+
+codo = (callback) ->
+  launch 'codo', [], callback
