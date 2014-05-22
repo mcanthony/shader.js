@@ -7,16 +7,32 @@ var ASTPathDispatcher, ASTPathResolver, ASTWalker, Base, Fragment, SymbolExtract
 ASTPathResolver = (function() {
   function ASTPathResolver() {}
 
+  ASTPathResolver.prototype.array_rule = /(.*?)\[(\d*)\]/mi;
+
   ASTPathResolver.prototype.parse = function(path) {
-    var node, node_str, node_strs, results, _i, _len, _ref, _ref1;
+    var arr_cap, id, index, is_arr, node, node_str, node_strs, results, _i, _len, _ref, _ref1;
     node_strs = path.split('>');
     results = [];
     for (_i = 0, _len = node_strs.length; _i < _len; _i++) {
       node_str = node_strs[_i];
       node = node_str.split(':');
+      id = (_ref = node[0]) != null ? _ref : '';
+      is_arr = false;
+      index = -1;
+      arr_cap = this.array_rule.exec(id);
+      if (arr_cap != null) {
+        id = arr_cap[1];
+        index = parseInt(arr_cap[2]);
+        is_arr = true;
+        if (isNaN(index)) {
+          index = -1;
+        }
+      }
       results.push({
-        id: (_ref = node[0]) != null ? _ref : '',
-        type: (_ref1 = node[1]) != null ? _ref1 : ''
+        id: id,
+        type: (_ref1 = node[1]) != null ? _ref1 : '',
+        isArray: is_arr,
+        index: index
       });
     }
     return results;
@@ -43,7 +59,16 @@ ASTPathResolver = (function() {
       next_type = node.type;
       console.assert(next_id !== '', "path_node.id not specified");
       next = current[next_id];
+      console.log(node);
+      console.log(next);
       if (next != null) {
+        if (node.isArray) {
+          if (node.index === -1) {
+            continue;
+          } else {
+            next = next[node.index];
+          }
+        }
         if (next_type !== '' && next.type !== next_type) {
           next = null;
         }
@@ -51,6 +76,7 @@ ASTPathResolver = (function() {
       current = next;
       results.push(current);
     }
+    console.log(results);
     return results;
   };
 

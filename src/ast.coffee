@@ -26,6 +26,7 @@
 #   ':ExpressionStatement>expr:AssignmentExpression>left:Identifier'
 # @todo Implement Array accessor syntax
 class ASTPathResolver
+        array_rule: ///(.*?)\[(\d*)\]///mi
         # Parse a path
         # @param {string} path The path string
         # @return {Array} An array of path nodes (format: `{id: identifier, type: ast_type}`)
@@ -34,10 +35,22 @@ class ASTPathResolver
                 results = []
                 for node_str in node_strs
                         node = node_str.split ':'
+                        id = node[0] ? ''
+                        is_arr = false
+                        index = -1
+                        arr_cap = @array_rule.exec id
+                        if arr_cap?
+                                id = arr_cap[1]
+                                index = parseInt arr_cap[2]
+                                is_arr = true
+                                if isNaN index then index = -1
                         results.push
-                                id: node[0] ? ''
+                                id: id
                                 type: node[1] ? ''
+                                isArray: is_arr
+                                index: index
                 return results
+                
         # Resove given path string from specified root
         # @param {object} root The root AST node
         # @path {string} path The path string
@@ -64,12 +77,24 @@ class ASTPathResolver
                                 continue
                         next_id = node.id
                         next_type = node.type
+
                         # must have id
                         console.assert next_id != '', "path_node.id not specified"
                         # get next
                         next = current[next_id]
+                        console.log node
+                        console.log next
                         # check existance
                         if next?
+                                # Is array?
+                                if node.isArray
+                                        if node.index == -1
+                                                # TODO: Capture all
+                                                continue
+                                        else
+                                                # capture element
+                                                next = next[node.index]
+                                                
                                 # check type
                                 if next_type != '' and next.type != next_type
                                         next = null
@@ -77,6 +102,7 @@ class ASTPathResolver
                         current = next
                         # push
                         results.push current
+                console.log results
                 # done
                 return results
                 
