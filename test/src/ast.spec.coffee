@@ -1,5 +1,6 @@
 define (require, exports, module) ->
-        PathResolver = window.ShaderJs.Ast.PathResolver
+        Path = window.ShaderJs.Ast.Path
+        Util = require "./util"
         exports = describe "AST Utils", ->
                 describe "Environment", ->
                         it "has namespace 'window.ShaderJs.Ast'", ->

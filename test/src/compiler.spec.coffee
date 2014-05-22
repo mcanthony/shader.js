@@ -1,8 +1,7 @@
 define (require, exports, module) ->
         TypeResolver = window.ShaderJs.Compiler.TypeResolver
-        
-        strip = (program) ->
-                return program.body[0]
+
+        Util = require "./util"
                 
         exports = describe "Compiler", ->
                 describe "Environment", ->
@@ -14,7 +13,7 @@ define (require, exports, module) ->
                                 expect(window.ShaderJs.Compiler.TypeResolver?).toBe true
                 describe "TypeResolver", ->
                         it "resolves NewExpression", ->
-                                ast = strip esprima.parse "var v4 = new Vec4()"
+                                ast = Util.parseOne "var v4 = new Vec4()"
                                 symbol = ast.declarations[0]
                                 symbol.scope = "test"
                                 resolver = new TypeResolver()
