@@ -19,7 +19,7 @@ define(function(require, exports, module) {
       });
     });
     describe("PathResolver", function() {
-      var path, simple_node;
+      var fn_node, path, simple_node;
       path = new Path();
       simple_node = Util.parseOne("answer = 6 * 7");
       it("resolves path with no type constraints", function() {
@@ -38,17 +38,48 @@ define(function(require, exports, module) {
         var n, p, r, _i, _len;
         p = ":ExpressionStatement>expression:AssignmentExpression>right:BinaryExpression";
         r = path.resolve(simple_node, p);
+        expect(r.length).toEqual(3);
         for (_i = 0, _len = r.length; _i < _len; _i++) {
           n = r[_i];
-          expect(r.length).toEqual(3);
+          expect(n).not.toEqual(null);
         }
-        expect(n).not.toEqual(null);
         expect(r[0]).toEqual(simple_node);
         expect(r[1]).toEqual(simple_node.expression);
         return expect(r[2]).toEqual(simple_node.expression.right);
       });
-      it("resolves path with array accessor");
-      return it("resolves path with array element accessor");
+      fn_node = Util.parseOne("function foo(a, b) {}");
+      it("resolves path with array accessor", function() {
+        var id, n, p, r, _i, _j, _len, _len1, _ref, _results;
+        p = ":FunctionDeclaration>params[]:Identifier";
+        r = path.resolve(fn_node, p);
+        expect(r.length).toEqual(2);
+        for (_i = 0, _len = r.length; _i < _len; _i++) {
+          n = r[_i];
+          expect(n).not.toEqual(null);
+        }
+        expect(r[0]).toEqual(fn_node);
+        expect(r[1]).toEqual(fn_node.params);
+        expect(r[1] instanceof Array).toBe(true);
+        _ref = r[1];
+        _results = [];
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          id = _ref[_j];
+          _results.push(expect(id).to.toEuqal(null));
+        }
+        return _results;
+      });
+      return it("resolves path with array element accessor", function() {
+        var n, p, r, _i, _len;
+        p = ":FunctionDeclaration>params[0]:Identifier";
+        r = path.resolve(fn_node, p);
+        expect(r.length).toEqual(2);
+        for (_i = 0, _len = r.length; _i < _len; _i++) {
+          n = r[_i];
+          expect(n).not.toEqual(null);
+        }
+        expect(r[0]).toEqual(fn_node);
+        return expect(r[1]).toEqual(fn_node.params[0]);
+      });
     });
     return describe("PathDispatcher", function() {
       it("dispatches simple map");

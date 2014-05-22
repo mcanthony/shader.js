@@ -27,14 +27,36 @@ define (require, exports, module) ->
                         it "resolves path with type constraints", ->
                                 p = ":ExpressionStatement>expression:AssignmentExpression>right:BinaryExpression"
                                 r = path.resolve simple_node, p
-                                expect(r.length).toEqual 3 for n in r
-                                expect(n).not.toEqual null
+                                expect(r.length).toEqual 3
+                                for n in r
+                                        expect(n).not.toEqual null
                                 expect(r[0]).toEqual simple_node
                                 expect(r[1]).toEqual simple_node.expression
                                 expect(r[2]).toEqual simple_node.expression.right
 
-                        it "resolves path with array accessor"
-                        it "resolves path with array element accessor"
+                        # make test data
+                        fn_node = Util.parseOne "function foo(a, b) {}"
+                        it "resolves path with array accessor", ->
+                                p = ":FunctionDeclaration>params[]:Identifier"
+                                r = path.resolve fn_node, p
+                                expect(r.length).toEqual 2
+                                for n in r
+                                        expect(n).not.toEqual null
+                                expect(r[0]).toEqual fn_node
+                                expect(r[1]).toEqual fn_node.params
+                                expect(r[1] instanceof Array).toBe true
+                                for id in r[1]
+                                        expect(id).to.toEuqal null
+                                
+                        it "resolves path with array element accessor", ->
+                                p = ":FunctionDeclaration>params[0]:Identifier"
+                                r = path.resolve fn_node, p
+                                expect(r.length).toEqual 2
+                                for n in r
+                                        expect(n).not.toEqual null
+                                expect(r[0]).toEqual fn_node
+                                expect(r[1]).toEqual fn_node.params[0]
+                                
                 describe "PathDispatcher", ->
                         it "dispatches simple map"
                         it "dispatches nested map"
