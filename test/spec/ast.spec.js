@@ -19,8 +19,34 @@ define(function(require, exports, module) {
       });
     });
     describe("PathResolver", function() {
-      it("resolves path with no type constraints");
-      it("resolves path with type constraints");
+      var path, simple_node;
+      path = new Path();
+      simple_node = Util.parseOne("answer = 6 * 7");
+      it("resolves path with no type constraints", function() {
+        var n, r, _i, _len;
+        r = path.resolve(simple_node, ":>expression>left");
+        expect(r.length).toEqual(3);
+        for (_i = 0, _len = r.length; _i < _len; _i++) {
+          n = r[_i];
+          expect(n).not.toEqual(null);
+        }
+        expect(r[0]).toEqual(simple_node);
+        expect(r[1]).toEqual(simple_node.expression);
+        return expect(r[2]).toEqual(simple_node.expression.left);
+      });
+      it("resolves path with type constraints", function() {
+        var n, p, r, _i, _len;
+        p = ":ExpressionStatement>expression:AssignmentExpression>right:BinaryExpression";
+        r = path.resolve(simple_node, p);
+        for (_i = 0, _len = r.length; _i < _len; _i++) {
+          n = r[_i];
+          expect(r.length).toEqual(3);
+        }
+        expect(n).not.toEqual(null);
+        expect(r[0]).toEqual(simple_node);
+        expect(r[1]).toEqual(simple_node.expression);
+        return expect(r[2]).toEqual(simple_node.expression.right);
+      });
       it("resolves path with array accessor");
       return it("resolves path with array element accessor");
     });

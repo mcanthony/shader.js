@@ -67,7 +67,7 @@ class ASTPathResolver
                         # must have id
                         console.assert next_id != '', "path_node.id not specified"
                         # get next
-                        next = node[next_id]
+                        next = current[next_id]
                         # check existance
                         if next?
                                 # check type

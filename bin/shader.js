@@ -42,7 +42,7 @@ ASTPathResolver = (function() {
       next_id = node.id;
       next_type = node.type;
       console.assert(next_id !== '', "path_node.id not specified");
-      next = node[next_id];
+      next = current[next_id];
       if (next != null) {
         if (next_type !== '' && next.type !== next_type) {
           next = null;
