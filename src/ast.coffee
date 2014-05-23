@@ -88,8 +88,6 @@ class ASTPathResolver
                         console.assert next_id != '', "path_node.id not specified"
                         # get next
                         next = current[next_id]
-                        console.log node
-                        console.log next
                         # check existance
                         if next?
                                 # Is array?
@@ -104,8 +102,6 @@ class ASTPathResolver
                                                 remaining_nodes = nodes[i..]
                                                 remaining_nodes[0].id = ""
                                                 remaining_nodes[0].isArray = false
-                                                console.log "-_-"
-                                                console.log remaining_nodes[0]
                                                 if remaining_nodes.length == 0
                                                         results.push next
                                                         break
@@ -133,7 +129,6 @@ class ASTPathResolver
                         current = next
                         # push
                         results.push current
-                console.log results
                 # restore root
                 nodes.unshift root_node
                 # done

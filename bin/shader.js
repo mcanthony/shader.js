@@ -67,8 +67,6 @@ ASTPathResolver = (function() {
       next_type = node.type;
       console.assert(next_id !== '', "path_node.id not specified");
       next = current[next_id];
-      console.log(node);
-      console.log(next);
       if (next != null) {
         if (node.isArray) {
           if (node.index === -1) {
@@ -76,8 +74,6 @@ ASTPathResolver = (function() {
             remaining_nodes = nodes.slice(i);
             remaining_nodes[0].id = "";
             remaining_nodes[0].isArray = false;
-            console.log("-_-");
-            console.log(remaining_nodes[0]);
             if (remaining_nodes.length === 0) {
               results.push(next);
               break;
@@ -104,7 +100,6 @@ ASTPathResolver = (function() {
       current = next;
       results.push(current);
     }
-    console.log(results);
     nodes.unshift(root_node);
     return results;
   };

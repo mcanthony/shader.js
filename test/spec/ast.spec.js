@@ -19,7 +19,7 @@ define(function(require, exports, module) {
       });
     });
     describe("PathResolver", function() {
-      var fn_node, path, simple_node;
+      var declare_node, fn_node, path, simple_node;
       path = new Path();
       simple_node = Util.parseOne("answer = 6 * 7");
       it("resolves path with no type constraints", function() {
@@ -64,11 +64,11 @@ define(function(require, exports, module) {
         _results = [];
         for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
           id = _ref[_j];
-          _results.push(expect(id).to.toEuqal(null));
+          _results.push(expect(id).not.toEqual(null));
         }
         return _results;
       });
-      return it("resolves path with array element accessor", function() {
+      it("resolves path with array element accessor", function() {
         var n, p, r, _i, _len;
         p = ":FunctionDeclaration>params[0]:Identifier";
         r = path.resolve(fn_node, p);
@@ -79,6 +79,26 @@ define(function(require, exports, module) {
         }
         expect(r[0]).toEqual(fn_node);
         return expect(r[1]).toEqual(fn_node.params[0]);
+      });
+      declare_node = Util.parseOne("var foo = 1, bar = 2");
+      return it("resolves path with array element mapping", function() {
+        var n, p, r, _i, _j, _len, _len1, _ref, _results;
+        p = ":VariableDeclaration>declarations[]:VariableDeclarator>id:Identifier";
+        r = path.resolve(declare_node, p);
+        expect(r.length).toEqual(2);
+        for (_i = 0, _len = r.length; _i < _len; _i++) {
+          n = r[_i];
+          expect(n).not.toEqual(null);
+        }
+        expect(r[1] instanceof Array).toEqual(true);
+        expect(r[1].length).toEqual(2);
+        _ref = r[1];
+        _results = [];
+        for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
+          n = _ref[_j];
+          _results.push(expect(n).not.toEqual(null));
+        }
+        return _results;
       });
     });
     return describe("PathDispatcher", function() {

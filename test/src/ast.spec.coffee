@@ -46,7 +46,7 @@ define (require, exports, module) ->
                                 expect(r[1]).toEqual fn_node.params
                                 expect(r[1] instanceof Array).toBe true
                                 for id in r[1]
-                                        expect(id).to.toEuqal null
+                                        expect(id).not.toEqual null
                                 
                         it "resolves path with array element accessor", ->
                                 p = ":FunctionDeclaration>params[0]:Identifier"
@@ -56,6 +56,18 @@ define (require, exports, module) ->
                                         expect(n).not.toEqual null
                                 expect(r[0]).toEqual fn_node
                                 expect(r[1]).toEqual fn_node.params[0]
+
+                        declare_node = Util.parseOne "var foo = 1, bar = 2"
+                        it "resolves path with array element mapping", ->
+                                p = ":VariableDeclaration>declarations[]:VariableDeclarator>id:Identifier"
+                                r = path.resolve declare_node, p
+                                expect(r.length).toEqual 2
+                                for n in r
+                                        expect(n).not.toEqual null
+                                expect(r[1] instanceof Array).toEqual true
+                                expect(r[1].length).toEqual 2
+                                for n in r[1]
+                                        expect(n).not.toEqual null
                                 
                 describe "PathDispatcher", ->
                         it "dispatches simple map"
