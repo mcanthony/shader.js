@@ -80,6 +80,18 @@ define(function(require, exports, module) {
         expect(r[0]).toEqual(fn_node);
         return expect(r[1]).toEqual(fn_node.params[0]);
       });
+      it("resolves root array", function() {
+        var i, n, p, r, _i, _len, _results;
+        p = "[]:Identifier";
+        r = path.resolve(fn_node.params, p);
+        expect(r.length).toEqual(2);
+        _results = [];
+        for (i = _i = 0, _len = r.length; _i < _len; i = ++_i) {
+          n = r[i];
+          _results.push(expect(n).toEqual(fn_node.params[i]));
+        }
+        return _results;
+      });
       declare_node = Util.parseOne("var foo = 1, bar = 2");
       return it("resolves path with array element mapping", function() {
         var n, p, r, _i, _j, _len, _len1, _ref, _results;

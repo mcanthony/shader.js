@@ -5,6 +5,10 @@
 # RootNode:
 #     ':'
 #     ':' AstType
+# ArrayElement:
+#     '[' index ']'
+# ArrayMapping:
+#     '[' ']'
 # AstNode:
 #     ':'
 #     Identifier
@@ -61,12 +65,24 @@ class ASTPathResolver
                 
         _resolve: (root, nodes) ->
                 results = []
+                # handle array
+                if root instanceof Array
+                        console.assert nodes[0].isArray, "Expect path_root.isArray == true"
+                        for child in root
+                                r = @_resolve child, nodes
+                                if r instanceof Array and r.length == 1
+                                        results.push r[0]
+                                else
+                                        results.push r
+                        return results
+
                 # check length
                 if nodes.length == 0
                         return results
                 # handle root node
                 root_node = nodes.shift()
                 # root should not have id
+                # TODO: might not be necessary
                 console.assert root_node.id == '', "Expect path_root.id == ''. Actual: #{root_node.id}"
                 # check type
                 if root_node.type != '' and root_node.type != root.type
@@ -100,23 +116,9 @@ class ASTPathResolver
                                                 #       May cause bugs by this side effect 
                                                 n = []
                                                 remaining_nodes = nodes[i..]
-                                                remaining_nodes[0].id = ""
-                                                remaining_nodes[0].isArray = false
-                                                if remaining_nodes.length == 0
-                                                        results.push next
-                                                        break
-                                                for child in next
-                                                        e = @_resolve child, remaining_nodes
-                                                        # strip array if it has only one element
-                                                        if e.length == 1
-                                                                n.push e[0]
-                                                        else
-                                                                n.push e
-                                                # no need to continue
-                                                # no need to check type
-                                                # all remaining nodes are handled
-                                                # in array's elements
-                                                results.push n
+                                                # remaining_nodes[0].id = ""
+                                                # remaining_nodes[0].isArray = false
+                                                results.push @_resolve next, remaining_nodes
                                                 break
                                         else
                                                 # capture element

@@ -45,8 +45,21 @@ ASTPathResolver = (function() {
   };
 
   ASTPathResolver.prototype._resolve = function(root, nodes) {
-    var child, current, e, i, n, next, next_id, next_type, node, remaining_nodes, results, root_node, _i, _j, _len, _len1;
+    var child, current, i, n, next, next_id, next_type, node, r, remaining_nodes, results, root_node, _i, _j, _len, _len1;
     results = [];
+    if (root instanceof Array) {
+      console.assert(nodes[0].isArray, "Expect path_root.isArray == true");
+      for (_i = 0, _len = root.length; _i < _len; _i++) {
+        child = root[_i];
+        r = this._resolve(child, nodes);
+        if (r instanceof Array && r.length === 1) {
+          results.push(r[0]);
+        } else {
+          results.push(r);
+        }
+      }
+      return results;
+    }
     if (nodes.length === 0) {
       return results;
     }
@@ -57,7 +70,7 @@ ASTPathResolver = (function() {
     }
     results.push(root);
     current = root;
-    for (i = _i = 0, _len = nodes.length; _i < _len; i = ++_i) {
+    for (i = _j = 0, _len1 = nodes.length; _j < _len1; i = ++_j) {
       node = nodes[i];
       if (current == null) {
         results.push(null);
@@ -72,22 +85,7 @@ ASTPathResolver = (function() {
           if (node.index === -1) {
             n = [];
             remaining_nodes = nodes.slice(i);
-            remaining_nodes[0].id = "";
-            remaining_nodes[0].isArray = false;
-            if (remaining_nodes.length === 0) {
-              results.push(next);
-              break;
-            }
-            for (_j = 0, _len1 = next.length; _j < _len1; _j++) {
-              child = next[_j];
-              e = this._resolve(child, remaining_nodes);
-              if (e.length === 1) {
-                n.push(e[0]);
-              } else {
-                n.push(e);
-              }
-            }
-            results.push(n);
+            results.push(this._resolve(next, remaining_nodes));
             break;
           } else {
             next = next[node.index];

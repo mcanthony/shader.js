@@ -57,6 +57,13 @@ define (require, exports, module) ->
                                 expect(r[0]).toEqual fn_node
                                 expect(r[1]).toEqual fn_node.params[0]
 
+                        it "resolves root array", ->
+                                p = "[]:Identifier"
+                                r = path.resolve fn_node.params, p
+                                expect(r.length).toEqual 2
+                                for n, i in r
+                                        expect(n).toEqual fn_node.params[i]
+
                         declare_node = Util.parseOne "var foo = 1, bar = 2"
                         it "resolves path with array element mapping", ->
                                 p = ":VariableDeclaration>declarations[]:VariableDeclarator>id:Identifier"
