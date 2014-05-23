@@ -39,18 +39,26 @@ ASTPathResolver = (function() {
   };
 
   ASTPathResolver.prototype.resolve = function(root, path) {
-    var current, next, next_id, next_type, node, nodes, results, root_node, _i, _len;
+    var nodes;
     nodes = this.parse(path);
+    return this._resolve(root, nodes);
+  };
+
+  ASTPathResolver.prototype._resolve = function(root, nodes) {
+    var child, current, e, i, n, next, next_id, next_type, node, remaining_nodes, results, root_node, _i, _j, _len, _len1;
     results = [];
+    if (nodes.length === 0) {
+      return results;
+    }
     root_node = nodes.shift();
-    console.assert(root_node.id === '', "Expect path_root.id == ''");
+    console.assert(root_node.id === '', "Expect path_root.id == ''. Actual: " + root_node.id);
     if (root_node.type !== '' && root_node.type !== root.type) {
       root = null;
     }
     results.push(root);
     current = root;
-    for (_i = 0, _len = nodes.length; _i < _len; _i++) {
-      node = nodes[_i];
+    for (i = _i = 0, _len = nodes.length; _i < _len; i = ++_i) {
+      node = nodes[i];
       if (current == null) {
         results.push(null);
         continue;
@@ -64,7 +72,27 @@ ASTPathResolver = (function() {
       if (next != null) {
         if (node.isArray) {
           if (node.index === -1) {
-            continue;
+            n = [];
+            remaining_nodes = nodes.slice(i);
+            remaining_nodes[0].id = "";
+            remaining_nodes[0].isArray = false;
+            console.log("-_-");
+            console.log(remaining_nodes[0]);
+            if (remaining_nodes.length === 0) {
+              results.push(next);
+              break;
+            }
+            for (_j = 0, _len1 = next.length; _j < _len1; _j++) {
+              child = next[_j];
+              e = this._resolve(child, remaining_nodes);
+              if (e.length === 1) {
+                n.push(e[0]);
+              } else {
+                n.push(e);
+              }
+            }
+            results.push(n);
+            break;
           } else {
             next = next[node.index];
           }
@@ -77,6 +105,7 @@ ASTPathResolver = (function() {
       results.push(current);
     }
     console.log(results);
+    nodes.unshift(root_node);
     return results;
   };
 

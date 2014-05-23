@@ -57,11 +57,17 @@ class ASTPathResolver
         # @return {Array} An array of each AST node in the path. Its length equals path nodes' count. Each element's value will be `null` if the corresponding path node is not valid.
         resolve: (root, path) ->
                 nodes = @parse path
+                @_resolve root, nodes
+                
+        _resolve: (root, nodes) ->
                 results = []
+                # check length
+                if nodes.length == 0
+                        return results
                 # handle root node
                 root_node = nodes.shift()
                 # root should not have id
-                console.assert root_node.id == '', "Expect path_root.id == ''"
+                console.assert root_node.id == '', "Expect path_root.id == ''. Actual: #{root_node.id}"
                 # check type
                 if root_node.type != '' and root_node.type != root.type
                         root = null
@@ -70,8 +76,8 @@ class ASTPathResolver
                 # root matched
                 current = root
                 # the rest
-                for node in nodes
-                        # Not valid, perserve counts
+                for node, i in nodes
+                        # Not valid, perserve counts (if no array)
                         if not current?
                                 results.push null
                                 continue
@@ -89,8 +95,33 @@ class ASTPathResolver
                                 # Is array?
                                 if node.isArray
                                         if node.index == -1
-                                                # TODO: Capture all
-                                                continue
+                                                # Capture all
+                                                # Note: need review.
+                                                #       `nodes` is not deep-copied but modified
+                                                #       in place.
+                                                #       May cause bugs by this side effect 
+                                                n = []
+                                                remaining_nodes = nodes[i..]
+                                                remaining_nodes[0].id = ""
+                                                remaining_nodes[0].isArray = false
+                                                console.log "-_-"
+                                                console.log remaining_nodes[0]
+                                                if remaining_nodes.length == 0
+                                                        results.push next
+                                                        break
+                                                for child in next
+                                                        e = @_resolve child, remaining_nodes
+                                                        # strip array if it has only one element
+                                                        if e.length == 1
+                                                                n.push e[0]
+                                                        else
+                                                                n.push e
+                                                # no need to continue
+                                                # no need to check type
+                                                # all remaining nodes are handled
+                                                # in array's elements
+                                                results.push n
+                                                break
                                         else
                                                 # capture element
                                                 next = next[node.index]
@@ -103,6 +134,8 @@ class ASTPathResolver
                         # push
                         results.push current
                 console.log results
+                # restore root
+                nodes.unshift root_node
                 # done
                 return results
                 
