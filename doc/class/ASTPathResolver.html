@@ -11,8 +11,8 @@
     <div id='base' data-path='../'></div>
 <div id='header'>
   <div id='menu'>
-    <a href='../extra/README.md.html' title='ShaderJs'>
-      ShaderJs
+    <a href='../extra/README.md.html' title='Shader.js'>
+      Shader.js
     </a>
     &raquo;
     <a href='../alphabetical_index.html' title='Index'>
@@ -35,18 +35,25 @@
       </table>
       <h2>Overview</h2>
       <div class='docstring'>
-  <div class='note todo'>
-    <strong>TODO:</strong>
-    Implement Array accessor syntax 
-  </div>
   <p>Helper class for resloving AST path</p><h3 id="path-syntax">Path Syntax</h3>
-<pre><code>RootNode:
+<pre><code>TypeValidator:
     &#39;:&#39;
-    &#39;:&#39; AstType
+    &#39;:&#39; AST_TYPE
+ArrayElement:
+    &#39;[&#39; INDEX &#39;]&#39;
+ArrayMapping:
+    &#39;[&#39; &#39;]&#39;
+ArrayAccessor:
+    ArrayElement
+    ArrayMapping
+UnnamedNode:
+    TypeValidator
+    ArrayAccessor TypeValidator
+RootNode:
+    UnnamedNode
 AstNode:
-    &#39;:&#39;
     Identifier
-    Identifier &#39;:&#39; AstType
+    Identifier UnnamedNode
 AstPath:
     RootNode
     AstPath &#39;&gt;&#39; AstNode
@@ -66,7 +73,13 @@ AstPath:
 # get root.expr.left
 &#39;:&gt;expr&gt;left&#39;
 # get root.expr.left and assert each node&#39;s type
-&#39;:ExpressionStatement&gt;expr:AssignmentExpression&gt;left:Identifier&#39;</code></pre>
+&#39;:ExpressionStatement&gt;expr:AssignmentExpression&gt;left:Identifier&#39;
+# root is an array, walk each element and map results to an Array of the same dimension
+&#39;[]:&gt;id&gt;left&#39;
+# root is an array, get first element and walk from there
+&#39;[0]:&gt;id&gt;left&#39;
+# a more complex syntax: type validator + array mapping
+&#39;:VariableDeclaration&gt;declarations[]:VariableDeclarator&gt;id:Identifier&#39;</code></pre>
   </div>
 </div>
 <div class='tags'>
@@ -89,13 +102,24 @@ AstPath:
     <span class='signature'>
       <a href='#resolve-dynamic'>
         #
-(object)
+(Array)
 <b>resolve</b><span>(root, path)</span>
       </a>
     </span>
     <span class='desc'>
-      Resove given path string from specified root @path {string} path The path string
-
+      Resolve given path string from specified root 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#_resolve-dynamic'>
+        #
+(Array)
+<b>_resolve</b><span>(root, nodes)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Resolve parsed path from specified root 
     </span>
   </li>
 </ul>
@@ -141,13 +165,12 @@ AstPath:
   <div class='method_details'>
     <p class='signature' id='resolve-dynamic'>
       #
-(object)
+(Array)
 <b>resolve</b><span>(root, path)</span>
       <br>
     </p>
     <div class='docstring'>
-  <p>Resove given path string from specified root
-@path {string} path The path string</p>
+  <p>Resolve given path string from specified root</p>
 </div>
 <div class='tags'>
   <h3>Parameters:</h3>
@@ -162,16 +185,77 @@ AstPath:
       &mdash;
       <span class='desc'>The root AST node </span>
     </li>
+    <li>
+      <span class='name'>path</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The path string </span>
+    </li>
   </ul>
   <h3>Returns:</h3>
   <ul class='return'>
     <li>
       <span class='type'></span>
       (
-        <tt>object</tt>
+        <tt>Array</tt>
       )
       &mdash;
-      <span class='desc'>The node specified by path. The value will be <code>null</code> if path is not valid </span>
+      <span class='desc'>An array of each AST node in the path. Each element&#39;s value will be <code>null</code> if the corresponding path node is not valid. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='_resolve-dynamic'>
+      #
+(Array)
+<b>_resolve</b><span>(root, nodes)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <div class='note'>
+    <strong>Note:</strong>
+    Internal use only 
+  </div>
+  <p>Resolve parsed path from specified root</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>root</span>
+      <span class='type'>
+        (
+          <tt>object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The root AST node </span>
+    </li>
+    <li>
+      <span class='name'>nodes</span>
+      <span class='type'>
+        (
+          <tt>Array</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Parsed path </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Array</tt>
+      )
+      &mdash;
+      <span class='desc'>An array of each AST node in the path. Each element&#39;s value will be <code>null</code> if the corresponding path node is not valid. </span>
     </li>
   </ul>
 </div>
@@ -179,7 +263,7 @@ AstPath:
 </div>
     </div>
     <div id='footer'>
-  May 22, 14 08:51:48 by
+  May 23, 14 12:04:33 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

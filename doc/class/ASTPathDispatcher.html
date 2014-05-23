@@ -11,8 +11,8 @@
     <div id='base' data-path='../'></div>
 <div id='header'>
   <div id='menu'>
-    <a href='../extra/README.md.html' title='ShaderJs'>
-      ShaderJs
+    <a href='../extra/README.md.html' title='Shader.js'>
+      Shader.js
     </a>
     &raquo;
     <a href='../alphabetical_index.html' title='Index'>
@@ -43,6 +43,10 @@
     <strong>TODO:</strong>
     Collect return values 
   </div>
+  <div class='note todo'>
+    <strong>TODO:</strong>
+    Nested dispatch 
+  </div>
   <p>Match AST node path and dispatch method calls</p>
 </div>
 <div class='tags'>
@@ -58,6 +62,7 @@
       </a>
     </span>
     <span class='desc'>
+      Receive a node as root and resolve pathes from there. 
     </span>
   </li>
 </ul>
@@ -78,9 +83,10 @@
       Map format
     </h4>
     <pre><code class='coffeescript'>map =
-  &#39;:FunctionDeclaration&#39;: (node) -&gt;
+  &#39;:FunctionDeclaration&#39;: (fn) -&gt;
     # do stuff with the node
-  &#39;:ExpressionStatement&gt;expr:AssignmentExpression&gt;left:Identifier&#39;: (node)-&gt;
+  # The last AST node in path is passed first. Then the result are passed in order.
+  &#39;:ExpressionStatement&gt;expr:AssignmentExpression&gt;left:Identifier&#39;: (id, root, expr)-&gt;
     # do stuff with the node</code></pre>
   </div>
 </div>
@@ -110,12 +116,31 @@
 <b>dispatch</b><span>(node)</span>
       <br>
     </p>
-    
+    <div class='docstring'>
+  <p>Receive a node as root and resolve pathes from there.
+If any path in the map can be resloved from specified node,
+the method registered in that path will be invoked.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>node</span>
+      <span class='type'>
+        (
+          <tt>object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The AST node </span>
+    </li>
+  </ul>
+</div>
   </div>
 </div>
     </div>
     <div id='footer'>
-  May 22, 14 08:51:48 by
+  May 23, 14 12:04:33 by
   <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
     Codo
   </a>

@@ -2,17 +2,24 @@
 #
 # ### Path Syntax
 # ```
-# RootNode:
+# TypeValidator:
 #     ':'
-#     ':' AstType
+#     ':' AST_TYPE
 # ArrayElement:
-#     '[' index ']'
+#     '[' INDEX ']'
 # ArrayMapping:
 #     '[' ']'
+# ArrayAccessor:
+#     ArrayElement
+#     ArrayMapping
+# UnnamedNode:
+#     TypeValidator
+#     ArrayAccessor TypeValidator
+# RootNode:
+#     UnnamedNode
 # AstNode:
-#     ':'
 #     Identifier
-#     Identifier ':' AstType
+#     Identifier UnnamedNode
 # AstPath:
 #     RootNode
 #     AstPath '>' AstNode
@@ -28,8 +35,14 @@
 #   ':>expr>left'
 #   # get root.expr.left and assert each node's type
 #   ':ExpressionStatement>expr:AssignmentExpression>left:Identifier'
-# @todo Implement Array accessor syntax
+#   # root is an array, walk each element and map results to an Array of the same dimension
+#   '[]:>id>left'
+#   # root is an array, get first element and walk from there
+#   '[0]:>id>left'
+#   # a more complex syntax: type validator + array mapping
+#   ':VariableDeclaration>declarations[]:VariableDeclarator>id:Identifier'
 class ASTPathResolver
+        # @nodoc
         array_rule: ///(.*?)\[(\d*)\]///mi
         # Parse a path
         # @param {string} path The path string
@@ -55,14 +68,19 @@ class ASTPathResolver
                                 index: index
                 return results
                 
-        # Resove given path string from specified root
+        # Resolve given path string from specified root
         # @param {object} root The root AST node
-        # @path {string} path The path string
-        # @return {Array} An array of each AST node in the path. Its length equals path nodes' count. Each element's value will be `null` if the corresponding path node is not valid.
+        # @param {string} path The path string
+        # @return {Array} An array of each AST node in the path. Each element's value will be `null` if the corresponding path node is not valid.
         resolve: (root, path) ->
                 nodes = @parse path
                 @_resolve root, nodes
-                
+
+        # Resolve parsed path from specified root
+        # @note Internal use only
+        # @param {object} root The root AST node
+        # @param {Array} nodes Parsed path
+        # @return {Array} An array of each AST node in the path. Each element's value will be `null` if the corresponding path node is not valid.
         _resolve: (root, nodes) ->
                 results = []
                 # handle array
